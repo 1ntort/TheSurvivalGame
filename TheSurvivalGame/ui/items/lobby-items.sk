@@ -1,0 +1,20 @@
+on load:
+    tsg wait until nbts are loaded # @skignore
+    
+    set the tsg item named "lobby selector" to TheSurvivalGame_applyNBT("compass", "lobby selector", {-TheSurvivalGame item NBTs::lobby selector}, true, "lobbyMenu") # @skignore
+    set the tsg item named "lobby join" to TheSurvivalGame_applyNBT("lime stained glass pane", "lobby join", {-TheSurvivalGame item NBTs::lobby join}, true, "none", "none", "joinServer") # @skignore
+    
+function TheSurvivalGame_rightClickEvent_lobbyMenu(player: player):
+    TheSurvivalGame_openUI_lobbyMenu({_player}) # @skignore
+    
+function TheSurvivalGame_uiEvent_joinServer(player: player, item name: string):
+    close inventory of {_player}
+    send action bar "&aSending you to the world..." to {_player}
+    apply potion of blindness of tier 255 without particles to {_player} for 5 seconds
+    apply potion of slowness of tier 255 without particles to {_player} for 5 seconds
+    wait 2 seconds
+    teleport {_player} to location(0, -40, 0, world("world"))
+    
+    wait 1 tick
+    set slot 8 of {_player}'s inventory to the tsg item named "menu item" # @skignore
+    give {_player} the tsg item named "oak log" # @skignore

@@ -1,0 +1,22 @@
+on load:
+    set the tsg item named "resource wand" to TheSurvivalGame_applyNBT("golden shovel", "resource wand", {-TheSurvivalGame item NBTs::resource wand}, false, "resourcePosition2", "resourcePosition1") # @skignore
+
+function TheSurvivalGame_generateItem_resourcelist() :: item:
+    set {_resource list NBT} to {-TheSurvivalGame item NBTs::resource list}
+    return TheSurvivalGame_applyNBT("oak sappling", "resourcelist", {_resource list NBT}, true) # @skignore
+
+brig command tree /thesurvivalgame:resource: # @skignore
+    permission: thesurvivalgame.resource
+    description: Handles everything to do with TheSurvivalGame resources.
+    usages: /resource
+    aliases: /rc
+    literal arg "list":
+        permission: thesurvivalgame.resource.list
+        trigger:
+            send "&atotally listing rn"
+    literal arg "wand":
+        permission: thesurvivalgame.resource.wand
+        trigger:
+            give player a tsg item named "resource wand"
+    trigger:
+        TheSurvivalGame_openUI_resource(player) # @skignore

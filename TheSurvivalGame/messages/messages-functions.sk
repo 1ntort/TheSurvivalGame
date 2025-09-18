@@ -1,0 +1,176 @@
+import:
+  org.bukkit.map.MinecraftFont
+
+on load:
+    set {-TheSurvivalGame formatting::<default>} to "<##FBFBDD>"
+    set {-TheSurvivalGame formatting::<success>} to "<##4EB276>"
+    set {-TheSurvivalGame formatting::<error>} to "<##D66B6B>"
+    set {-TheSurvivalGame formatting::<warning>} to "<##DFA860>"
+    set {-TheSurvivalGame formatting::<info>} to "<##93B6CF>"
+    set {-TheSurvivalGame formatting::<extra>} to "<##A9A9A9>"
+    
+    set {-TheSurvivalGame formatting::<prefix>} to "[■]"
+    set {-TheSurvivalGame formatting::<newline>} to nl
+
+effect:
+    patterns:
+        (tsg|the[ ]survival[ ]game) (send|log) [(info:info|success:success|error:error|warning:warning)] %string%
+        (tsg|the[ ]survival[ ]game) broadcast [(info:info|success:success|error:error|warning:warning)] %string%
+        (tsg|the[ ]survival[ ]game) (send|log) [(info:info|success:success|error:error|warning:warning)] %string% to %player%
+    parse:
+        set {_type} to "info"
+        if parse tags contain "success":
+            set {_type} to "success"
+        else if parse tags contain "error":
+            set {_type} to "error"
+        else if parse tags contain "warning":
+            set {_type} to "warning"
+        continue
+    trigger:
+        set {_content} to tsg formatted expr-1
+        set {_text} to "<%{_type}%><prefix> <default>%{_content}%"
+        set {_formatted} to tsg formatted {_text}
+        if (matched pattern) is 1:
+            send {_formatted} to console
+        else if (matched pattern) is 2:
+            broadcast {_formatted}
+        else if (matched pattern) is 3:
+            send {_formatted} to exprs-2
+
+local function replaceInvalidCharacters(text: string) :: string:
+    set {_new text} to ""
+    loop (length of {_text}) times:
+        set {_character} to character at loop-iteration in {_text}
+        if MinecraftFont.Font.isValid({_character}) is false:
+            add " " to {_new text}
+        else:
+            add {_character} to {_new text}
+    return {_new text}
+
+expression:
+    patterns:
+        (tsg|the[ ]survival[ ]game) centered text from %string% [[with prefix %-string%] [and] [[with] suffix %-string%]]
+    parse:
+        continue
+    get:
+        set {_text} to expr-1
+        set {_raw text} to raw string within unformatted ({_text})
+        
+        if MinecraftFont.Font.isValid({_raw text}) is false:
+            tsg send warning "Supplied text to centered text effect contained invalid characters: <newline>Centered text may be invalid."
+            set {_raw text} to replaceInvalidCharacters({_raw text})
+        
+        set {_width} to MinecraftFont.Font.getWidth({_raw text})
+        set {_space width} to MinecraftFont.Font.getWidth(" ") + 1
+        set {_before spaces} to floor((154 - ({_width} / 2)) / {_space width})
+        set {_after spaces} to 0
+        
+        if expr-2 is set:
+            set {_prefix} to expr-2
+            set {_raw prefix} to raw string within unformatted ({_prefix})
+            
+            if MinecraftFont.Font.isValid({_raw prefix}) is false:
+                tsg send warning "Supplied prefix to centered text effect contained invalid characters: <newline>Centered text may be invalid."
+                set {_raw prefix} to replaceInvalidCharacters({_raw prefix})
+            
+            set {_prefix width} to MinecraftFont.Font.getWidth({_raw prefix})
+            set {_before spaces} to {_before spaces} - floor({_prefix width} / {_space width})
+        else:
+            set {_prefix} to ""
+        if expr-3 is set:
+            set {_suffix} to expr-3
+            set {_raw suffix} to raw string within unformatted ({_suffix})
+            
+            if MinecraftFont.Font.isValid({_suffix}) is false:
+                tsg send warning "Supplied suffix to centered text effect contained invalid characters: <newline>Centered text may be invalid."
+                set {_raw suffix} to replaceInvalidCharacters({_raw suffix})
+                
+            set {_suffix width} to MinecraftFont.Font.getWidth({_raw suffix})
+            set {_after spaces} to {_before spaces} - floor({_suffix width} / {_space width})
+        else:
+            set {_suffix} to ""
+        
+        set {_before spaces repeated} to " " repeated floor({_before spaces}) times
+        if {_after spaces} > 0:
+            set {_after spaces repeated} to " " repeated floor({_after spaces}) times
+        else:
+            set {_after spaces repeated} to ""
+        
+        set {_final} to "%{_prefix}%%{_before spaces repeated}%%{_text}%%{_after spaces repeated}%%{_suffix}%"
+        return {_final}
+
+expression:
+    patterns:
+        (tsg|the[ ]survival[ ]game) (format[ted]|colo[u]r[ed]) %string%
+    get:
+        set {_string} to expr-1
+        loop {-TheSurvivalGame formatting::*}:
+            set {_match} to loop-index
+            set {_format} to loop-value
+            if {_string} contains {_match}:
+                replace every {_match} in {_string} with {_format}
+        
+        set {_content} to ""
+        loop {_string} split at nl:
+            if loop-iteration is not 1:
+                add "%nl%  " to {_content}
+            add loop-value to {_content}
+        
+        return formatted {_content}
+
+brig command /thesurvivalgame:formatting: # @skignore
+    permission: thesurvivalgame.developer.formatting
+    description: Tests out TheSurvivalGame custom formatting in chat. (DEVELOPER)
+    usage: /formatting <string>
+    arguments:
+        register literal arg named "type" using "info", "success", "error" and "warning"
+        register greedystring arg named "text"
+    trigger:
+        tsg send info "Sending formatted text..." to player
+        if {_type} is "info":
+            tsg send "%{_text}%" to player
+        else if {_type} is "success":
+            tsg send success "%{_text}%" to player
+        else if {_type} is "error":
+            tsg send error "%{_text}%" to player
+        else if {_type} is "warning":
+            tsg send warning "%{_text}%" to player
+        else:
+            tsg send error "Invalid type argument for /formatting." to player
+
+brig command /thesurvivalgame:centered: # @skignore
+    permission: thesurvivalgame.developer.centered
+    description: Sends the text specified text centered in chat. (DEVELOPER)
+    usage: /centered <string>
+    arguments:
+        register text arg named "text"
+        register optional text arg named "prefix"
+        register optional text arg named "suffix"
+    trigger:
+        tsg send info "Sending centered text..." to player
+        set {_text} to tsg formatted "%{_text}%"
+        if {_prefix} is set:
+            set {_prefix} to tsg formatted "%{_prefix}%"
+            if {_suffix} is set:
+                set {_suffix} to tsg formatted "%{_suffix}%"
+                send tsg centered text from {_text} with prefix {_prefix} and suffix {_suffix}
+            else:
+                send tsg centered text from {_text} with prefix {_prefix}
+        else:
+            if {_suffix} is set:
+                set {_suffix} to tsg formatted "%{_suffix}%"
+                send tsg centered text from {_text} with suffix {_suffix}
+            else:
+                send tsg centered text from {_text} to player
+
+brig command /thesurvivalgame:clearchat: # @skignore
+    permission: thesurvivalgame.clearchat
+    description: Clears the chat for the target player.
+    aliases: /cc
+    usage: /clearchat <selector>
+    arguments:
+        register optional greedystring arg named "targets" using the tsg player arguments
+    trigger:
+        set {_players::*} to parse tsg player argument {_targets} from player
+        if {_players::*} is not "none":
+            send nl repeated 99 times to {_players::*}

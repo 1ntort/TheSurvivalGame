@@ -1,0 +1,110 @@
+function TheSurvivalGame_loadConfig() :: boolean:
+    set {_default config file} to file path {-TheSurvivalGame options::default config path}
+    if {_default config file} is not a file:
+        TheSurvivalGame_buildMessage_critical("Invalid path for ""default config path"" in ""config.sk""; Path is either incorrect or missing. (%{-TheSurvivalGame options::default config path}%)") # @skignore
+        return false
+    load yaml {-TheSurvivalGame options::default config path} as "TheSurvivalGame default config"
+    
+    if yaml "TheSurvivalGame default config" is empty:
+        TheSurvivalGame_buildMessage_critical("""default config path"" is empty.") # @skignore
+        return false
+    set {_is default} to false
+    
+    set {_public config file} to file path {-TheSurvivalGame options::public config path}
+    if {_public config file} is not a file:
+        send "&aPublic config file does not exist. Cloning default..." to console
+        sync copy {_default config file} to {_public config file}
+        set {_is default} to true
+    load yaml {-TheSurvivalGame options::public config path} as "TheSurvivalGame config"
+    
+    if yaml "TheSurvivalGame config" is empty:
+        send "&aPublic config file is empty. Cloning default..." to console
+        sync copy {_default config file} to {_public config file}
+        set {_is default} to true
+    
+    set {_default nodes::*} to all yaml nodes of "TheSurvivalGame default config"
+    
+    if {_is default} is false:
+        set {_default headers::*} to header of "TheSurvivalGame default config"
+        if {_default headers::*} is set:
+            clear {_new headers::*}
+            loop {_default headers::*}:
+                set {_new header} to loop-value
+                if first character of {_new header} is "#":
+                    set {_new header} to last (length of {_new header} - 1) characters of {_new header}
+                
+                set {_new headers::%loop-iteration%} to {_new header}
+                
+            set header of "TheSurvivalGame config" with an extra line to {_new headers::*}
+        
+        loop {_default nodes::*}:
+            if yaml path loop-value in "TheSurvivalGame config" does not exist:
+                set yaml value loop-value in "TheSurvivalGame config" to yaml value loop-value in "TheSurvivalGame default config" without string checks
+            
+            set {_default comments::*} to comments of yaml node loop-value in "TheSurvivalGame default config"
+            if {_default comments::*} is set:
+                clear {_new comments::*}
+                loop {_default comments::*}:
+                    set {_new comment} to loop-value-2
+                    if first 2 characters of {_new comment} is "# ":
+                        set {_new comment} to last (length of {_new comment} - 2) characters of {_new comment}
+                    
+                    set {_new comments::%loop-iteration-2%} to {_new comment}
+                
+                set comments of yaml node loop-value in "TheSurvivalGame config" to {_new comments::*}
+        
+        loop all yaml nodes of "TheSurvivalGame config":
+            if yaml path loop-value in "TheSurvivalGame default config" does not exist:
+                set {_comments::*} to comments of yaml node loop-value in "TheSurvivalGame config"
+                if {_comments::*} does not contain "# THIS VALUE IS UNUSED. MODIFYING THIS VALUE WILL DO NOTHING.":
+                    if {_comments::*} is set:
+                        clear {_new comments::*}
+                        loop {_comments::*}:
+                            set {_new comment} to loop-value-2
+                            if first 2 characters of {_new comment} is "# ":
+                                set {_new comment} to last (length of {_new comment} - 2) characters of {_new comment}
+                
+                            set {_new comments::%loop-iteration-2%} to {_new comment}
+                        set {_comments::*} to {_new comments::*}
+                    
+                    add "==================================================", "THIS VALUE IS UNUSED. MODIFYING THIS VALUE WILL DO NOTHING.", "IT IS RECOMMENDED TO DELETE THIS VALUE AND/OR TRANSFER ITS CONTENTS" and "TO A NEW VALUE IF THERE IS ONE" to {_comments::*}
+                    set comments of yaml node loop-value in "TheSurvivalGame config" to {_comments::*}
+                
+    
+    set yaml value "version" in "TheSurvivalGame config" to yaml value "version" in "TheSurvivalGame default config"
+    save yaml "TheSurvivalGame config"
+    
+    set {_config nodes::*} to all yaml nodes of "TheSurvivalGame config"
+    loop {_config nodes::*}:
+        set {-TheSurvivalGame config::%loop-value%} to yaml value loop-value in "TheSurvivalGame config" without string checks
+    
+    set {_data return} to TheSurvivalGame_setupData() # @skignore
+    return {_data return}
+
+expression:
+    patterns:
+        [the] (tsg|the[ ]survival[ ]game) config[uration] (entry|value|index) %string%
+    parse:
+        continue
+    get:
+        set {_index} to expr-1
+        return {-TheSurvivalGame config::%{_index}%}
+
+condition:
+    patterns:
+        (tsg|the[ ]survival[ ]game) is dev[eloper] [mode]
+        (tsg|the[ ]survival[ ]game) isn[']t dev[eloper] [mode]
+    parse:
+        if parse tags contain "enabled":
+            set {_enabled} to true
+        if parse tags contain "disabled":
+            set {_disabled} to true
+        continue
+    check:
+        set {_developer} to the tsg config value "developer"
+        if (matched pattern) is 1:
+            if {_developer} is true:
+                continue
+        else if (matched pattern) is 2:
+            if {_developer} is false:
+                continue
