@@ -1,0 +1,11 @@
+function TheSurvivalGame_buildMessage_critical(error message: string):
+    set {_message} to "<error>⚠ CRITICAL ERROR ⚠"
+    add "<newline><default>A critical error has occured and the skript cannot continue!" to {_message}
+    add "<newline><newline><warning>Error Message: %{_error message}%" to {_message}
+    tsg broadcast error {_message}
+
+function TheSurvivalGame_buildMessage_error(error message: string):
+    set {_message} to "<error>An error has occured in the skript."
+    add "<newline><default>This doesn't exactly break anything, however it is important for you to know." to {_message}
+    add "<newline><newline><warning>Error Message: %{_error message}%" to {_message}
+    tsg broadcast error {_message}

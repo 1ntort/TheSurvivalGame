@@ -1,0 +1,86 @@
+on load:
+    create section with {_player} stored in {-TheSurvivalGame ui openers::menu}:
+        set {_gui} to chest inventory with 6 rows named "&8Menu"
+    
+        set slot (integers between 0 and 53) of {_gui} to the tsg item named "background" # @skignore
+        set slot 13 of {_gui} to the tsg item named "view level" # @skignore
+        set slot 12 of {_gui} to the tsg item named "vaults" with arguments {_player} # @skignore
+        set slot 31 of {_gui} to the tsg item named "prestige" with arguments {_player} # @skignore
+        set slot 49 of {_gui} to the tsg item named "close" # @skignore
+        
+        open {_gui} to {_player}
+        set the tsg current and back ui of {_player} to "menu" and "none" # @skignore
+    
+    create section with {_player} stored in {-TheSurvivalGame ui openers::view level}:
+        set {_gui} to chest inventory with 3 rows named "&8Levels"
+        set slot (integers between 0 and 26) of {_gui} to the tsg item named "background" # @skignore
+        set slot 22 of {_gui} to the tsg item named "back" # @skignore
+        set slot 10 of {_gui} to the tsg item named "level" with arguments {_player} and "Woodcutting" # @skignore
+        set slot 12 of {_gui} to the tsg item named "level" with arguments {_player} and "Mining" # @skignore
+        set slot 14 of {_gui} to the tsg item named "level" with arguments {_player} and "Farming" # @skignore
+        set slot 16 of {_gui} to the tsg item named "level" with arguments {_player} and "Crafting" # @skignore
+        
+        open {_gui} to {_player}
+        set the tsg current and back ui of {_player} to "view level" and "menu" # @skignore
+    
+    create section with {_player} stored in {-TheSurvivalGame ui openers::view vaults}:
+        close inventory of {_player}
+        set {_gui} to chest inventory with 3 rows named "&8Vaults"
+        
+        set slot (integers between 0 and 26) of {_gui} to the tsg item named "background" # @skignore
+        set slot 22 of {_gui} to the tsg item named "back" # @skignore
+        loop integers between 10 and 16:
+            set slot loop-value of {_gui} to the tsg item named "vault" with arguments {_player} and ((loop-value) - 9) # @skignore
+        
+        open {_gui} to {_player}
+        set the tsg current and back ui of {_player} to "view vaults" and "menu" # @skignore
+    
+    create section with {_player} and {_id} stored in {-TheSurvivalGame ui openers::view vault}:
+        if {_player} has permission "thesurvivalgame.vault.%{_id}%":
+            set {_vault items} to the tsg data value at "vault %{_id}%" for {_player}
+            set {_gui} to chest inventory with 5 rows named "&8Vault #%{_id}%"
+            set slot (integers between 0 and 8) of {_gui} to the tsg item named "background" # @skignore
+            set slot (integers between 36 and 44) of {_gui} to the tsg item named "background" # @skignore
+            set slot 40 of {_gui} to the tsg item named "back" # @skignore
+            
+            if {_vault items} is "none":
+                open {_gui} to {_player}
+            else:
+                set {_split::*} to {_vault items} split at "&"
+                loop {_split::*}:
+                    set {_item split::*} to loop-value split at "="
+                    set {_slot} to {_item split::1} parsed as number
+                    set {_item data::*} to {_item split::2} split at "|"
+                    
+                    set {_item} to the tsg item named "%{_item data::1}%" # @skignore
+                    set {_count} to {_item data::2} parsed as number
+                    set slot {_slot} of {_gui} to ({_count} of {_item})
+                        
+            open {_gui} to {_player}
+            set the tsg current and back ui of {_player} to "view vault" and "view vaults" # @skignore
+        else:
+            tsg send error "How'd that happen? You can't access this vault." to {_player}
+    
+    create section with {_player} stored in {-TheSurvivalGame ui openers::prestige}:
+        set {_gui} to chest inventory with 4 rows named "&8Prestige"
+        
+        set {_uuid} to {_player}'s uuid
+        set {_can prestige} to true
+        if the tsg data value at "woodcutting level" for {_player} < 25:
+            set {_can prestige} to false
+        if the tsg data value at "mining level" for {_player} < 25:
+            set {_can prestige} to false
+        if the tsg data value at "farming level" for {_player} < 25:
+            set {_can prestige} to false
+        if the tsg data value at "crafting level" for {_player} < 25:
+            set {_can prestige} to false
+        
+        set slot (integers between 0 and 35) of {_gui} to the tsg item named "background" # @skignore
+        if {_can prestige} is true:
+            set slot 13 of {_gui} to the tsg item named "prestige confirmation" # @skignore
+        else:
+            set slot 13 of {_gui} to the tsg item named "prestige error" # @skignore
+        set slot 31 of {_gui} to the tsg item named "back" # @skignore
+        
+        open {_gui} to {_player}
+        set the tsg current and back ui of {_player} to "prestige" and "menu" # @skignore

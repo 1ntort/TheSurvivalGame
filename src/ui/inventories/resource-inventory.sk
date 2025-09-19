@@ -1,0 +1,11 @@
+
+# not done either go away bye bye
+on load:
+    create section with {_player} stored in {-TheSurvivalGame ui openers::resource}:
+        set {_gui} to chest inventory with 3 rows named "&8Resource"
+        
+        set slot (integers between 0 and 26) of {_gui} to the tsg item named "background" # @skignore
+        set slot 10 of {_gui} to the tsg item named "resource list" # @skignore
+        
+        open {_gui} to {_player}
+        set the tsg current and back ui of {_player} to "resource" and "none" # @skignore

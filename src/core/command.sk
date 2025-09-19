@@ -1,0 +1,82 @@
+plural expression:
+    patterns:
+        parse[d] [the] (tsg|the[ ]survival[ ]game) player arg[ument][s] %string% from %player%
+        [the] (tsg|the[ ]survival[ ]game) player arg[ument]s
+    parse:
+        continue
+    get:
+        if (matched pattern) is 1:
+            set {_argument} to expr-1
+            set {_player} to expr-2
+            
+            clear {_result::*}
+            if {_argument} is not set:
+                send "&aPlayer is not set. Using default (me)" to {_player}
+                set {_result::*} to {_player}
+            else if first character of {_argument} is "*":
+                if {_argument} is "*all":
+                    set {_result::*} to all players
+                else if {_argument} is "*me":
+                    set {_result::*} to {_player}
+                else if {_argument} is "*others":
+                    set {_result::*} to all players where [input is not {_player}]
+                else if {_argument} is "*bedrock":
+                    set {_result::*} to all players where [first character of "%input%" is "."]
+                else if {_argument} is "*java":
+                    set {_result::*} to all players where [first character of "%input%" is not "."]
+                else if {_argument} is "*op":
+                    set {_result::*} to all players where [input is op]
+                else if {_argument} is "*deop":
+                    set {_result::*} to all players where [input is not op]
+                    set {_result::*} to {_players::*}
+                else if {_argument} is "*random":
+                    set {_result::*} to a random player out of all players
+                else if first (length of "*haspermission=") characters of {_argument} is "*haspermission=":
+                    set {_permission} to last (length of {_argument} - (length of "*haspermission=")) characters of {_argument}
+                    set {_result::*} to all players where [input has permission {_permission}]
+                else if first (length of "*nopermission=") characters of {_argument} is "*nopermission=":
+                    set {_permission} to last (length of {_argument} - (length of "*nopermission=")) characters of {_argument}
+                    set {_result::*} to all players where [input does not have permission {_permission}]
+                else:
+                    send "&c* found at the start, but no valid special selector. Target: ""%{_argument}%""" to {_player}
+                    return "none"
+            else:
+                set {_result::*} to player({_argument}, true)
+            
+            if {_result::1} is not set:
+                send "&cNo player found. Target: ""%{_argument}%""" to {_player}
+                return "none"
+            return {_result::*}
+        else if (matched pattern) is 2:
+            set {_arguments::*} to "*all", "*me", "*others", "*bedrock", "*java", "*op", "*deop", "*random", "*haspermission=" and "*nopermission="
+            loop all players:
+                add "%loop-player%" to {_arguments::*}
+            
+            return {_arguments::*}
+
+brig command /thesurvivalgame:fetchplayer: # @skignore
+    permission: thesurvivalgame.developer.getplayer
+    description: Sends the player(s) fetched from the first argument. (DEVELOPER)
+    usage: /getplayer <selector>
+    arguments:
+        register optional greedystring arg named "targets" using the tsg player arguments
+    trigger:
+        set {_players::*} to parse tsg player argument {_targets} from player
+        if {_players::*} is not "none":
+            set {_count} to size of {_players::*}
+            set {_final} to "%nl%&a&lPlayers (%{_count}%):&r"
+            
+            if {_count} > 10:
+                loop 10 times:
+                    set {_player} to {_players::%loop-iteration%}
+                    set {_final} to "%{_final}%&r%nl% &8&m    &a %loop-iteration%: &b&l%{_player}% &7(%{_player}'s uuid%)&r"
+                
+                set {_final} to "%{_final}%&r%nl% &8&m    &b and %{_count} - 10% more...%nl%&r"
+            else:
+                loop {_players::*}:
+                    set {_player} to loop-value
+                    set {_final} to "%{_final}%&r%nl% &8&m    &a %loop-iteration%: &b&l%{_player}% &7(%{_player}'s uuid%)&r"
+                
+                set {_final} to "%{_final}%&r%nl%&r"
+            
+            send {_final} to player

@@ -1,0 +1,56 @@
+import:
+    java.util.List
+    org.bukkit.inventory.MenuType
+    org.bukkit.inventory.MerchantRecipe
+
+expression:
+    patterns:
+        [a] [new] (tsg|the[ ]survival[ ]game) merchant recipe with [(a|the)] (reward|result) [of] %itemstack% and [a[n]] (ingredient[s]|price[s]) [of] %itemstack% [two:and %-itemstack%]
+    parse:
+        if parse tags contain "two":
+            set {_two} to true
+        continue
+    get:
+        set {_recipe} to a new MerchantRecipe(expr-1, 0, 10000, false, 0, 1.0, 0, 0, true)
+        set {_ingredients::1} to expr-2
+        if {_two} is true:
+            set {_ingredients::2} to expr-3
+        
+        set {_ingredients list} to List.of({_ingredients::*})
+        {_recipe}.setIngredients({_ingredients list})
+        
+        return {_recipe}
+        
+expression:
+    patterns:
+        [a] [new] (tsg|the[ ]survival[ ]game) (merchant|trader) (from|with) %objects% for %player%
+    parse:
+        continue
+    get:
+        set {_player} to expr-2
+        set {_merchant} to MenuType.Typed.MERCHANT.create({_player}, {_name})
+        set {_recipe list} to List.of(exprs-1)
+        
+        {_merchant}.getMerchant().setRecipes({_recipe list})
+        return {_merchant}
+
+effect:
+    patterns:
+        (open|show) [the] (tsg|the[ ]survival[ ]game) (merchant|trader) %object%
+    parse:
+        continue
+    trigger:
+        set {_merchant} to expr-1
+        set {_player} to {_merchant}.getPlayer()
+        ({_player}).openInventory({_merchant})
+
+command /testmerchant:
+    permission: op
+    trigger:
+        clear {_recipes::*}
+        add a new tsg merchant recipe with a result of 5 diamonds and ingredients 1 diamond and 25 dirt to {_recipes::*}
+        add a new tsg merchant recipe with a result of 25 dirt and ingredients 4 diamonds to {_recipes::*}
+        add a new tsg merchant recipe with a result of 1 gray stained glass pane and ingredients 30 gold blocks and 10 dirt to {_recipes::*}
+        
+        set {_merchant} to a new tsg merchant with {_recipes::*} for player
+        open the tsg merchant {_merchant}

@@ -1,0 +1,116 @@
+on load:
+    tsg wait until nbts are loaded # @skignore
+    
+    set the tsg item named "menu item" to TheSurvivalGame_applyNBT("nether star", "menu item", {-TheSurvivalGame item NBTs::menu item}, true, "open menu") # @skignore
+    create section with {_player} and {_item name} stored in {-TheSurvivalGame right click events::open menu}:
+        open tsg ui named "menu" for {_player} # @skignore
+    
+    set the tsg item named "view level" to TheSurvivalGame_applyNBT("experience bottle", "view level", {-TheSurvivalGame item NBTs::view level}, true, "none", "none", "view level") # @skignore
+    create section with {_player} and {_item name} stored in {-TheSurvivalGame ui events::view level}:
+        open tsg ui named "view level" for {_player} # @skignore
+    
+    set the tsg item named "locked vault" to TheSurvivalGame_applyNBT("barrier", "locked vault", {-TheSurvivalGame item NBTs::locked vault}, true) # @skignore
+    set the tsg item named "prestige confirmation" to TheSurvivalGame_applyNBT("lime stained glass pane", "prestige confirmation", {-TheSurvivalGame item NBTs::prestige confirmation}, true, "none", "none", "prestige confirm") # @skignore
+    create section with {_player} and {_item name} stored in {-TheSurvivalGame ui events::prestige confirm}:
+        close inventory of {_player}
+        
+        set {_old prestiges} to the tsg data value at "prestiges" for {_player}
+        set {_new prestiges} to {_old prestiges} + 1
+        
+        set {_old prestige points} to the tsg data value at "prestige points" for {_player}
+        set {_new prestige points} to {_old prestige points} + 1
+        
+        set the tsg data value at "woodcutting level" for {_player} to 1
+        set the tsg data value at "woodcutting xp" for {_player} to 0
+        set the tsg data value at "mining level" for {_player} to 1
+        set the tsg data value at "mining xp" for {_player} to 0
+        set the tsg data value at "farming level" for {_player} to 1
+        set the tsg data value at "farming xp" for {_player} to 0
+        set the tsg data value at "crafting level" for {_player} to 1
+        set the tsg data value at "crafting xp" for {_player} to 0
+        
+        set the tsg data value at "prestiges" for {_player} to {_new prestiges}
+        set the tsg data value at "prestige points" for {_player} to {_new prestige points}
+        
+        tsg broadcast info "%{_player}'s displayname%<default> has just prestiged! <extra>(%{_new prestiges}%)"
+    
+    set the tsg item named "prestige error" to TheSurvivalGame_applyNBT("red stained glass pane", "prestige error", {-TheSurvivalGame item NBTs::prestige error}, true) # @skignore
+    
+    create section with {_player} and {_stat} stored in {-TheSurvivalGame item generators::level}:
+        set {_xp} to the tsg data value at "%{_stat}% xp" for {_player}
+        {_xp} is set
+        set {_level} to the tsg data value at "%{_stat}% level" for {_player}
+        {_level} is set
+        
+        set {_max} to (the tsg xp required for level {_level}) abbreviated with tsg # @skignore
+        set {_bar} to the tsg progress bar for level {_level} and xp {_xp} # @skignore
+        set {_percent} to "%the tsg level percent for level {_level} and xp {_xp} rounded to 2 decimal places%%%" # @skignore
+        
+        if {_level} >= 25:
+            set {_level NBT} to {-TheSurvivalGame item NBTs::%{_stat}% level}
+            replace every "[LEVEL]" in {_level NBT} with "Max (25)"
+            replace every "[XP]" in {_level NBT} with "3.85K"
+            replace every "[MAX]" in {_level NBT} with "3.85K"
+            replace every "[BAR]" in {_level NBT} with "&a||||||||||||||||||||||||||||||||||||||||||||||||||"
+            replace every "[PERCENT]" in {_level NBT} with "100%%"
+            
+            return TheSurvivalGame_applyNBT("lime stained glass pane", "%{_stat}% level", {_level NBT}, true) # @skignore
+            
+        set {_level NBT} to {-TheSurvivalGame item NBTs::%{_stat}% level}
+        replace every "[LEVEL]" in {_level NBT} with "%{_level}%"
+        replace every "[XP]" in {_level NBT} with ({_xp} abbreviated with tsg) # @skignore
+        replace every "[MAX]" in {_level NBT} with {_max}
+        replace every "[BAR]" in {_level NBT} with {_bar}
+        replace every "[PERCENT]" in {_level NBT} with {_percent}
+        
+        return TheSurvivalGame_applyNBT("lime stained glass pane", "%{_stat}% level", {_level NBT}, true) # @skignore
+    
+    create section with {_player} stored in {-TheSurvivalGame item generators::vaults}:
+        set {_vaults} to 0
+        if {_player} has permission "thesurvivalgame.vault.1":
+            add 1 to {_vaults}
+        if {_player} has permission "thesurvivalgame.vault.2":
+            add 1 to {_vaults}
+        if {_player} has permission "thesurvivalgame.vault.3":
+            add 1 to {_vaults}
+        if {_player} has permission "thesurvivalgame.vault.4":
+            add 1 to {_vaults}
+        if {_player} has permission "thesurvivalgame.vault.5":
+            add 1 to {_vaults}
+        if {_player} has permission "thesurvivalgame.vault.6":
+            add 1 to {_vaults}
+        if {_player} has permission "thesurvivalgame.vault.7":
+            add 1 to {_vaults}
+        
+        set {_vaults NBT} to {-TheSurvivalGame item NBTs::vaults}
+        replace every "[VAULTS]" in {_vaults NBT} with "%{_vaults}%"
+        
+        return TheSurvivalGame_applyNBT("barrel", "vaults", {_vaults NBT}, true, "none", "none", "view vaults") # @skignore
+    
+    create section with {_player} and {_item name} stored in {-TheSurvivalGame ui events::view vaults}:
+        open tsg ui named "view vaults" for {_player} # @skignore
+    
+    create section with {_player} and {_id} stored in {-TheSurvivalGame item generators::vault}:
+        if {_player} has permission "thesurvivalgame.vault.%{_id}%":
+            set {_vault NBT} to {-TheSurvivalGame item NBTs::vault}
+            replace every "[VAULT]" in {_vault NBT} with "%{_id}%"
+            return TheSurvivalGame_applyNBT("barrel", "vault%{_id}%", {_vault NBT}, true, "none", "none", "view vault") # @skignore
+        else:
+            return the tsg item named "locked vault"
+    
+    create section with {_player} and {_item name} stored in {-TheSurvivalGame ui events::view vault}:
+        set {_id} to {_item name}
+        replace every "vault" in {_id} with ""
+        open tsg ui named "view vault" for {_player} with arguments {_id} # @skignore
+    
+    create section with {_player} stored in {-TheSurvivalGame item generators::prestige}:
+        set {_uuid} to {_player}'s uuid
+        set {_prestiges} to the tsg data value at "prestiges" for {_player}
+        
+        set {_prestige NBT} to {-TheSurvivalGame item NBTs::prestige}
+        replace every "[PRESTIGE]" in {_prestige NBT} with "%{_prestiges}%"
+        
+        return TheSurvivalGame_applyNBT("end crystal", "prestige", {_prestige NBT}, true, "none", "none", "prestige") # @skignore
+    
+    create section with {_player} and {_item name} stored in {-TheSurvivalGame ui events::prestige}:
+        open tsg ui named "prestige" for {_player} # @skignore
