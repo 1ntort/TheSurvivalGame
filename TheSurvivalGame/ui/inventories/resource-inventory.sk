@@ -1,8 +1,0 @@
-function TheSurvivalGame_openUI_resource(player: player):
-    set {_gui} to chest inventory with 3 rows named "&8Resource"
-    
-    set slot (integers between 0 and 26) of {_gui} to the tsg item named "background" # @skignore
-    set slot 10 of {_gui} to the tsg item named "resourcelist" # @skignore
-    
-    open {_gui} to {_player}
-    set the tsg current and back ui of {_player} to "resource" and "none" # @skignore

@@ -1,8 +1,0 @@
-function TheSurvivalGame_openUI_lobbyMenu(player: player):
-    set {_gui} to chest inventory with 3 rows named "&8Join Server"
-
-    set slot (integers between 0 and 26) of {_gui} to the tsg item named "background" # @skignore
-    set slot 13 of {_gui} to the tsg item named "lobby join" # @skignore
-    
-    open {_gui} to {_player}
-    set the tsg current and back ui of {_player} to "lobbyMenu" and "none" # @skignore
