@@ -1,0 +1,12 @@
+This is a file containing version information for the latest release of TheSurvivalGame.
+Help:
+	Lines prefixed with "@" are taken as entries
+	Anything else is ignored.
+	Quotation marks are not needed.
+	
+	Example:
+-	@version = 1.0
+-	@<entry> = <value>
+
+@version = 1.0
+@update url = none
